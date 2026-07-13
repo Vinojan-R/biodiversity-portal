@@ -1,6 +1,6 @@
-import bearImage from "../../assets/images/sloth-bear.jpg";
-import elephantImage from "../../assets/images/elephant.jpg";
-import leopardImage from "../../assets/images/leopard.jpg";
+import bearImage from "../../assets/images/sloth-bear.png";
+import elephantImage from "../../assets/images/elephant.png";
+import leopardImage from "../../assets/images/leopard.png";
 
 const animals = [
   {

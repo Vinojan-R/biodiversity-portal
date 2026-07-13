@@ -1,6 +1,6 @@
 import { Download } from "lucide-react";
 import { Link } from "react-router-dom";
-import heroImage from "../../assets/images/hero-lizard.jpg";
+import heroImage from "../../assets/images/hero-lizard.png";
 
 function HeroSection() {
   return (
