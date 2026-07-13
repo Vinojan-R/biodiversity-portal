@@ -1,77 +1,147 @@
-import { useMemo, useState } from "react";
-import SpeciesCard from "../components/species/SpeciesCard";
+import {
+  ArrowLeft,
+  Leaf,
+  MapPin,
+  ShieldCheck,
+} from "lucide-react";
+import { Link, useParams } from "react-router-dom";
 import { speciesData } from "../data/species";
 
-function SpeciesPage() {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [category, setCategory] = useState("All");
+function SpeciesDetailsPage() {
+  const { id } = useParams();
 
-  const filteredSpecies = useMemo(() => {
-    return speciesData.filter((species) => {
-      const value = searchTerm.toLowerCase();
+  const species = speciesData.find(
+    (animal) => animal.id === id,
+  );
 
-      const matchesSearch =
-        species.commonName.toLowerCase().includes(value) ||
-        species.scientificName.toLowerCase().includes(value);
+  if (!species) {
+    return (
+      <main className="grid min-h-[70vh] place-items-center px-6">
+        <div className="text-center">
+          <h1 className="text-4xl font-black text-slate-900">
+            Species not found
+          </h1>
 
-      const matchesCategory =
-        category === "All" || species.category === category;
-
-      return matchesSearch && matchesCategory;
-    });
-  }, [searchTerm, category]);
+          <Link
+            to="/species"
+            className="mt-6 inline-flex rounded-xl bg-emerald-950 px-6 py-3 font-bold text-white"
+          >
+            Return to species
+          </Link>
+        </div>
+      </main>
+    );
+  }
 
   return (
-    <section className="mx-auto max-w-7xl px-6 py-16">
-      <div className="max-w-3xl">
-        <p className="font-bold tracking-widest text-emerald-700 uppercase">
-          Species database
-        </p>
-
-        <h1 className="mt-3 text-4xl font-black text-emerald-950 md:text-5xl">
-          Explore endemic wildlife
-        </h1>
-
-        <p className="mt-5 text-lg leading-8 text-slate-600">
-          Search endemic lizards, frogs, snakes and geckos found in Sri Lanka.
-        </p>
-      </div>
-
-      <div className="mt-10 grid gap-4 md:grid-cols-[1fr_240px]">
-        <input
-          type="search"
-          placeholder="Search common or scientific name..."
-          className="rounded-xl border border-slate-300 bg-white px-4 py-3 outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
-          value={searchTerm}
-          onChange={(event) => setSearchTerm(event.target.value)}
-        />
-
-        <select
-          className="rounded-xl border border-slate-300 bg-white px-4 py-3 outline-none focus:border-emerald-600"
-          value={category}
-          onChange={(event) => setCategory(event.target.value)}
+    <main className="bg-slate-50">
+      <section className="mx-auto max-w-7xl px-6 py-12">
+        <Link
+          to="/species"
+          className="inline-flex items-center gap-2 font-bold text-emerald-800"
         >
-          <option value="All">All categories</option>
-          <option value="Lizard">Lizards</option>
-          <option value="Frog">Frogs</option>
-          <option value="Snake">Snakes</option>
-          <option value="Gecko">Geckos</option>
-        </select>
-      </div>
+          <ArrowLeft size={18} />
+          Back to species
+        </Link>
 
-      {filteredSpecies.length > 0 ? (
-        <div className="mt-10 grid gap-7 md:grid-cols-2 lg:grid-cols-3">
-          {filteredSpecies.map((species) => (
-            <SpeciesCard key={species.id} species={species} />
-          ))}
+        <div className="mt-8 grid overflow-hidden rounded-3xl bg-white shadow-xl lg:grid-cols-2">
+          <img
+            src={species.image}
+            alt={species.commonName}
+            className="h-full min-h-[430px] w-full object-cover"
+            onError={(event) => {
+              event.currentTarget.src =
+                "https://placehold.co/900x700/064e3b/ffffff?text=Species+Image";
+            }}
+          />
+
+          <div className="p-8 md:p-12">
+            <div className="flex flex-wrap gap-2">
+              <span className="rounded-full bg-emerald-100 px-4 py-2 text-sm font-bold text-emerald-800 capitalize">
+                {species.category.replace("-", " ")}
+              </span>
+
+              <span
+                className={`rounded-full px-4 py-2 text-sm font-bold ${
+                  species.endemic
+                    ? "bg-amber-100 text-amber-800"
+                    : "bg-blue-100 text-blue-800"
+                }`}
+              >
+                {species.endemic
+                  ? "Endemic to Sri Lanka"
+                  : "Native or recorded in Sri Lanka"}
+              </span>
+            </div>
+
+            <h1 className="mt-6 text-4xl font-black text-slate-900 md:text-5xl">
+              {species.commonName}
+            </h1>
+
+            <p className="mt-2 text-xl italic text-slate-500">
+              {species.scientificName}
+            </p>
+
+            <p className="mt-7 text-lg leading-8 text-slate-600">
+              {species.description}
+            </p>
+
+            <div className="mt-9 space-y-5">
+              <div className="flex gap-4">
+                <Leaf className="shrink-0 text-emerald-700" />
+
+                <div>
+                  <h2 className="font-black text-slate-900">
+                    Habitat
+                  </h2>
+
+                  <p className="mt-1 text-slate-600">
+                    {species.habitat}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex gap-4">
+                <MapPin className="shrink-0 text-emerald-700" />
+
+                <div>
+                  <h2 className="font-black text-slate-900">
+                    Distribution
+                  </h2>
+
+                  <p className="mt-1 text-slate-600">
+                    {species.region}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex gap-4">
+                <ShieldCheck className="shrink-0 text-emerald-700" />
+
+                <div>
+                  <h2 className="font-black text-slate-900">
+                    Conservation status
+                  </h2>
+
+                  <p className="mt-1 text-slate-600">
+                    {species.conservationStatus}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-9 rounded-2xl border border-amber-200 bg-amber-50 p-5">
+              <p className="text-sm leading-6 text-amber-900">
+                Species identification and conservation information
+                should be verified against the latest National Red List
+                or by a qualified wildlife specialist.
+              </p>
+            </div>
+          </div>
         </div>
-      ) : (
-        <div className="mt-10 rounded-2xl bg-slate-100 p-10 text-center text-slate-600">
-          No matching species were found.
-        </div>
-      )}
-    </section>
+      </section>
+    </main>
   );
 }
 
-export default SpeciesPage;
+export default SpeciesDetailsPage;
