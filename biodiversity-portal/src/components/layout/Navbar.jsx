@@ -101,6 +101,7 @@ function Navbar() {
           >
             Learn
           </NavLink>
+          
 
           {/* User Name */}
           <div className="mt-4 border-t border-emerald-800 pt-4 md:mt-0 md:border-none md:pt-0">
