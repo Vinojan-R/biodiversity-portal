@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import SpeciesCard from "../components/species/SpeciesCard";
 import { speciesData } from "../data/species";
-import "../styles/species.css";
+
 
 function SpeciesPage() {
   const [searchTerm, setSearchTerm] = useState("");
