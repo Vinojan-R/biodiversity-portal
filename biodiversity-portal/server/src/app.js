@@ -1,8 +1,17 @@
 import express from "express";
 import cors from "cors";
 import helmet from "helmet";
+import session from "express-session";
+import MongoStore from "connect-mongo";
+import authRoutes from "./routes/auth.js";
+import adminRoutes from "./routes/admin.js";
 
 const app = express();
+const allowedOrigins = new Set([
+  globalThis.process.env.CLIENT_URL,
+  "http://localhost:5173",
+  "http://localhost:5174",
+].filter(Boolean));
 
 // Security headers
 app.use(helmet());
@@ -10,7 +19,10 @@ app.use(helmet());
 // CORS configuration
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || "http://localhost:5173",
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.has(origin)) return callback(null, true);
+      return callback(new Error("Origin is not allowed by CORS."));
+    },
     credentials: true,
   })
 );
@@ -21,6 +33,27 @@ app.use(
     limit: "10kb",
   })
 );
+
+app.use(
+  session({
+    name: "biodiversity.sid",
+    secret: globalThis.process.env.SESSION_SECRET,
+    resave: false,
+    saveUninitialized: false,
+    store: globalThis.process.env.MONGODB_URI?.includes("<db_")
+      ? undefined
+      : MongoStore.create({ mongoUrl: globalThis.process.env.MONGODB_URI }),
+    cookie: {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: globalThis.process.env.NODE_ENV === "production",
+      maxAge: 1000 * 60 * 60 * 24 * 7,
+    },
+  }),
+);
+
+app.use("/api/auth", authRoutes);
+app.use("/api/admin", adminRoutes);
 
 // Test route
 app.get("/", (req, res) => {

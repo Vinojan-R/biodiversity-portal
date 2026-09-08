@@ -101,6 +101,12 @@ function Navbar() {
           >
             Learn
           </NavLink>
+
+          {user?.role === "admin" && (
+            <NavLink to="/admin" className={linkClass} onClick={() => setMenuOpen(false)}>
+              Admin
+            </NavLink>
+          )}
           
 
           {/* User Name */}

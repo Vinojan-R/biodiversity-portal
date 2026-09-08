@@ -12,6 +12,7 @@ import {
 } from "react-router-dom";
 import loginWildlifeImage from "../assets/images/login-wildlife.png";
 import { useAuth } from "../context/AuthContext";
+import { googleSignInUrl } from "../services/api";
 
 function GoogleIcon() {
   return (
@@ -31,7 +32,7 @@ function FacebookIcon() {
 
 function LoginPage() {
   const [formData, setFormData] = useState({
-    username: "",
+    email: "",
     password: "",
     rememberMe: true,
   });
@@ -42,6 +43,8 @@ function LoginPage() {
   const { login, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+
+  const oauthError = new URLSearchParams(location.search).get("oauth_error");
 
   if (isAuthenticated) {
     return <Navigate to="/home" replace />;
@@ -56,40 +59,21 @@ function LoginPage() {
     }));
   }
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault();
     setError("");
 
-    if (!formData.username.trim() || !formData.password.trim()) {
-      setError("Please enter your username and password.");
+    if (!formData.email.trim() || !formData.password.trim()) {
+      setError("Please enter your email and password.");
       return;
     }
 
-    // Temporary frontend authentication.
-    // Replace this section with the Node.js login API later.
-    login({
-      name: formData.username,
-      username: formData.username,
-    });
-
-    const destination = location.state?.from || "/home";
-
-    navigate(destination, {
-      replace: true,
-    });
-  }
-
-  function handleSocialLogin(provider) {
-    setError("");
-
-    login({
-      name: `${provider} User`,
-      provider,
-    });
-
-    navigate("/home", {
-      replace: true,
-    });
+    try {
+      await login({ email: formData.email, password: formData.password });
+      navigate(location.state?.from || "/home", { replace: true });
+    } catch (submitError) {
+      setError(submitError.message);
+    }
   }
 
   return (
@@ -129,16 +113,16 @@ function LoginPage() {
               >
                 <label className="block">
                   <span className="mb-2 block font-serif text-xl font-bold">
-                    Username
+                    Email address
                   </span>
 
                   <input
                     type="text"
-                    name="username"
-                    value={formData.username}
+                    name="email"
+                    value={formData.email}
                     onChange={handleChange}
-                    placeholder="Enter your username"
-                    autoComplete="username"
+                    placeholder="Enter your email"
+                    autoComplete="email"
                     className="w-full rounded-lg border border-transparent bg-slate-200 px-4 py-3.5 text-slate-900 outline-none transition placeholder:text-slate-500 focus:border-emerald-400 focus:bg-white focus:ring-4 focus:ring-emerald-400/20"
                   />
                 </label>
@@ -201,9 +185,11 @@ function LoginPage() {
                   </button>
                 </div>
 
-                {error && (
+                {(error || oauthError) && (
                   <p className="rounded-xl border border-red-400/30 bg-red-500/15 px-4 py-3 text-sm text-red-100">
-                    {error}
+                    {error || (oauthError === "google_not_configured"
+                      ? "Google sign-in needs to be configured in the server environment."
+                      : "Google sign-in could not be completed. Please try again.")}
                   </p>
                 )}
 
@@ -240,7 +226,7 @@ function LoginPage() {
               <div className="mt-8 grid gap-4 sm:grid-cols-2">
                 <button
                   type="button"
-                  onClick={() => handleSocialLogin("Google")}
+                  onClick={() => window.location.assign(googleSignInUrl)}
                   className="flex items-center justify-center gap-3 rounded-lg bg-slate-100 px-4 py-3 font-serif text-sm font-bold text-slate-900 transition hover:bg-white"
                 >
                   <GoogleIcon />
@@ -249,7 +235,7 @@ function LoginPage() {
 
                 <button
                   type="button"
-                  onClick={() => handleSocialLogin("Facebook")}
+                  onClick={() => setError("Social sign-in is not enabled yet.")}
                   className="flex items-center justify-center gap-3 rounded-lg bg-slate-100 px-4 py-3 font-serif text-sm font-bold text-slate-900 transition hover:bg-white"
                 >
                   <FacebookIcon />

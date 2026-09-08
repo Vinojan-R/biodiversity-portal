@@ -1,7 +1,8 @@
-import { Leaf } from "lucide-react";
+import { Eye, EyeOff, Leaf } from "lucide-react";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { googleSignInUrl } from "../services/api";
 
 function RegisterPage() {
   const [formData, setFormData] = useState({
@@ -12,8 +13,9 @@ function RegisterPage() {
   });
 
   const [error, setError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
-  const { login } = useAuth();
+  const { register } = useAuth();
   const navigate = useNavigate();
 
   function handleChange(event) {
@@ -25,7 +27,7 @@ function RegisterPage() {
     }));
   }
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault();
     setError("");
 
@@ -38,8 +40,8 @@ function RegisterPage() {
       return;
     }
 
-    if (formData.password.length < 6) {
-      setError("Password must contain at least 6 characters.");
+    if (formData.password.length < 8) {
+      setError("Password must contain at least 8 characters.");
       return;
     }
 
@@ -48,16 +50,12 @@ function RegisterPage() {
       return;
     }
 
-    // Temporary registration.
-    // Replace this with your backend API later.
-    login({
-      name: formData.name,
-      email: formData.email,
-    });
-
-    navigate("/home", {
-      replace: true,
-    });
+    try {
+      await register({ name: formData.name, email: formData.email, password: formData.password });
+      navigate("/home", { replace: true });
+    } catch (submitError) {
+      setError(submitError.message);
+    }
   }
 
   return (
@@ -81,6 +79,13 @@ function RegisterPage() {
         </h1>
 
         <form className="mt-8 space-y-5" onSubmit={handleSubmit}>
+          <button type="button" onClick={() => window.location.assign(googleSignInUrl)} className="flex w-full items-center justify-center gap-3 rounded-xl border border-slate-300 px-5 py-3 font-bold text-slate-800 hover:bg-slate-50">
+            <span className="text-lg font-black text-blue-600">G</span>
+            Continue with Google
+          </button>
+
+          <div className="flex items-center gap-3 text-xs font-bold uppercase tracking-wider text-slate-400"><span className="h-px flex-1 bg-slate-200" />or use email<span className="h-px flex-1 bg-slate-200" /></div>
+
           <input
             type="text"
             name="name"
@@ -100,13 +105,18 @@ function RegisterPage() {
           />
 
           <input
-            type="password"
+            type={showPassword ? "text" : "password"}
             name="password"
             value={formData.password}
             onChange={handleChange}
             placeholder="Password"
             className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-emerald-700"
           />
+
+          <button type="button" onClick={() => setShowPassword((current) => !current)} className="-mt-3 flex items-center gap-2 text-sm font-semibold text-emerald-800">
+            {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+            {showPassword ? "Hide password" : "Show password"}
+          </button>
 
           <input
             type="password"

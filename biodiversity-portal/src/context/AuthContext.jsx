@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import {
   createContext,
   useContext,
@@ -5,6 +6,7 @@ import {
   useMemo,
   useState,
 } from "react";
+import { apiRequest } from "../services/api";
 
 const AuthContext = createContext(null);
 
@@ -13,31 +15,40 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    try {
-      const savedUser = localStorage.getItem("endemiclens_user");
-
-      if (savedUser) {
-        setUser(JSON.parse(savedUser));
+    async function restoreSession() {
+      try {
+        const response = await apiRequest("/auth/me");
+        setUser(response.user);
+      } catch {
+        setUser(null);
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error("Failed to read saved user:", error);
-      localStorage.removeItem("endemiclens_user");
-    } finally {
-      setLoading(false);
     }
+
+    restoreSession();
   }, []);
 
-  function login(userData) {
-    localStorage.setItem(
-      "endemiclens_user",
-      JSON.stringify(userData),
-    );
-
-    setUser(userData);
+  async function login(credentials) {
+    const response = await apiRequest("/auth/login", {
+      method: "POST",
+      body: JSON.stringify(credentials),
+    });
+    setUser(response.user);
+    return response.user;
   }
 
-  function logout() {
-    localStorage.removeItem("endemiclens_user");
+  async function register(credentials) {
+    const response = await apiRequest("/auth/register", {
+      method: "POST",
+      body: JSON.stringify(credentials),
+    });
+    setUser(response.user);
+    return response.user;
+  }
+
+  async function logout() {
+    await apiRequest("/auth/logout", { method: "POST" }).catch(() => {});
     setUser(null);
   }
 
@@ -47,6 +58,7 @@ export function AuthProvider({ children }) {
       loading,
       isAuthenticated: Boolean(user),
       login,
+      register,
       logout,
     }),
     [user, loading],

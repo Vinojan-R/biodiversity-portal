@@ -1,9 +1,11 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 
 import ProtectedRoute from "./components/auth/ProtectedRoute";
+import AdminRoute from "./components/auth/AdminRoute";
 import Layout from "./components/layout/Layout";
 
 import EducationPage from "./pages/EducationPage";
+import AdminPage from "./pages/AdminPage";
 import HomePage from "./pages/HomePage";
 import IdentifyPage from "./pages/IdentifyPage";
 import LandingPage from "./pages/LandingPage";
@@ -26,6 +28,9 @@ function App() {
         {/* Routes that require login */}
         <Route element={<ProtectedRoute />}>
           <Route element={<Layout />}>
+            <Route element={<AdminRoute />}>
+              <Route path="/admin" element={<AdminPage />} />
+            </Route>
             <Route path="/home" element={<HomePage />} />
 
             <Route path="/species" element={<SpeciesPage />} />
