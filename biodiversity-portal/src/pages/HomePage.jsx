@@ -4,17 +4,13 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
+import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { apiRequest } from "../services/api";
 
 import heroBird from "../assets/images/home/hero-bird.png";
 import sriLankaMap from "../assets/images/home/Srilanka-map.png";
-
-import observation1 from "../assets/images/home/observation-1.png";
-import observation2 from "../assets/images/home/observation-2.png";
-import observation3 from "../assets/images/home/observation-3.png";
-import observation4 from "../assets/images/home/observation-4.png";
-import observation5 from "../assets/images/home/observation-5.png";
-import observation6 from "../assets/images/home/observation-6.png";
 
 import amphibianImage from "../assets/images/home/amphibian.png";
 import mammalImage from "../assets/images/home/mammal.png";
@@ -29,45 +25,6 @@ import urbanizationImage from "../assets/images/home/urbanization.png";
 
 import heatMapImage from "../assets/images/home/heat-map.png";
 import leopardDayImage from "../assets/images/home/leopard-day.png";
-
-const observations = [
-  {
-    id: 1,
-    commonName: "Purple-faced Langur",
-    scientificName: "Semnopithecus vetulus",
-    image: observation1,
-  },
-  {
-    id: 2,
-    commonName: "Red Slender Loris",
-    scientificName: "Loris tardigradus",
-    image: observation2,
-  },
-  {
-    id: 3,
-    commonName: "Green Lizard",
-    scientificName: "Calotes calotes",
-    image: observation3,
-  },
-  {
-    id: 4,
-    commonName: "Sri Lanka Spurfowl",
-    scientificName: "Galloperdix bicalcarata",
-    image: observation4,
-  },
-  {
-    id: 5,
-    commonName: "Pygmy Lizard",
-    scientificName: "Cophotis ceylanica",
-    image: observation5,
-  },
-  {
-    id: 6,
-    commonName: "Mouse Deer",
-    scientificName: "Moschiola meminna",
-    image: observation6,
-  },
-];
 
 const animalCategories = [
   {
@@ -156,25 +113,53 @@ const events = [
   },
 ];
 
-function ObservationCard({ observation }) {
+function shuffleSpecies(species) {
+  return [...species].sort(() => Math.random() - 0.5);
+}
+
+function WildlifeShowcase() {
+  const [species, setSpecies] = useState([]);
+  const [startIndex, setStartIndex] = useState(0);
+  const [paused, setPaused] = useState(false);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    let active = true;
+    async function loadSpecies() {
+      try {
+        const response = await apiRequest("/species?page=1&limit=50");
+        if (active) setSpecies(shuffleSpecies(response.data.species));
+      } catch (requestError) {
+        if (active) setError(requestError.message);
+      }
+    }
+    loadSpecies();
+    return () => { active = false; };
+  }, []);
+
+  useEffect(() => {
+    if (paused || species.length <= 4) return undefined;
+    const timer = window.setInterval(() => setStartIndex((current) => (current + 1) % species.length), 4000);
+    return () => window.clearInterval(timer);
+  }, [paused, species.length]);
+
+  function move(direction) {
+    setStartIndex((current) => (current + direction + species.length) % species.length);
+  }
+
+  const visibleSpecies = Array.from({ length: Math.min(4, species.length) }, (_, offset) => species[(startIndex + offset) % species.length]);
+
   return (
-    <article className="min-w-[150px] overflow-hidden bg-white">
-      <img
-        src={observation.image}
-        alt={observation.commonName}
-        className="h-32 w-full object-cover"
-      />
-
-      <div className="p-2">
-        <p className="text-[10px] font-bold uppercase text-slate-700">
-          {observation.commonName}
-        </p>
-
-        <p className="mt-1 text-[9px] italic text-slate-500">
-          {observation.scientificName}
-        </p>
+    <section className="bg-slate-200 px-4 py-5" onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)}>
+      <div className="mx-auto max-w-7xl">
+        <div className="mb-4 flex items-center justify-between gap-4">
+          <div><h2 className="font-serif text-2xl font-black text-black">Wildlife showcase</h2><p className="mt-1 text-xs font-semibold text-slate-600">Discover species from the live catalogue</p></div>
+          <div className="flex gap-2"><button type="button" onClick={() => move(-1)} disabled={species.length < 2} aria-label="Previous animals" className="rounded-full border border-emerald-900 p-2 text-emerald-950 transition hover:bg-emerald-950 hover:text-white disabled:opacity-40"><ChevronLeft size={18} /></button><button type="button" onClick={() => move(1)} disabled={species.length < 2} aria-label="Next animals" className="rounded-full border border-emerald-900 p-2 text-emerald-950 transition hover:bg-emerald-950 hover:text-white disabled:opacity-40"><ChevronRight size={18} /></button></div>
+        </div>
+        {error ? <div className="rounded-2xl bg-white p-10 text-center text-sm text-slate-500">Wildlife catalogue is temporarily unavailable.</div> : species.length === 0 ? <div className="rounded-2xl bg-white p-10 text-center text-sm text-slate-500">Loading wildlife catalogue...</div> : <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">{visibleSpecies.map((animal, offset) => <motion.div key={`${animal.id}-${startIndex}-${offset}`} initial={{ opacity: 0, x: 18 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.35, delay: offset * 0.05 }}><Link to={`/species/${animal.id}`} className="group relative block aspect-[4/3] overflow-hidden rounded-2xl bg-emerald-950 shadow-sm ring-1 ring-emerald-900/10 focus:outline-none focus:ring-4 focus:ring-emerald-400" aria-label={`View details for ${animal.commonName}`}><img src={animal.image} alt={animal.commonName} loading="lazy" onError={(event) => { event.currentTarget.style.display = "none"; }} className="h-full w-full object-cover transition duration-500 group-hover:scale-110" /><div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/5 to-transparent opacity-80 transition group-hover:bg-black/45" /><div className="absolute right-4 bottom-4 left-4 translate-y-2 text-white opacity-90 transition duration-300 group-hover:translate-y-0 group-hover:opacity-100"><h3 className="font-serif text-lg font-black leading-tight">{animal.commonName}</h3><p className="mt-1 text-xs italic text-emerald-100">{animal.scientificName}</p><span className="mt-3 inline-flex items-center gap-1 text-xs font-bold">View details <ArrowUpRight size={14} /></span></div></Link></motion.div>)}</div>}
+        {species.length > 4 && <div className="mt-4 flex justify-center gap-1.5" aria-label="Wildlife carousel position">{species.slice(0, Math.min(species.length, 8)).map((_, index) => <button key={index} type="button" onClick={() => setStartIndex(index)} aria-label={`Show animals starting at position ${index + 1}`} className={`h-2 rounded-full transition-all ${startIndex === index ? "w-6 bg-emerald-950" : "w-2 bg-emerald-700/30"}`} />)}</div>}
       </div>
-    </article>
+    </section>
   );
 }
 
@@ -309,32 +294,7 @@ function HomePage() {
         </div>
       </section>
 
-      {/* Recent observations */}
-      <section className="bg-slate-200 px-4 py-5">
-        <div className="mx-auto max-w-7xl">
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="font-serif text-2xl font-black text-black">
-              Recent observations
-            </h2>
-
-            <Link
-              to="/species"
-              className="text-sm font-bold text-emerald-900 hover:underline"
-            >
-              View all
-            </Link>
-          </div>
-
-          <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
-            {observations.map((observation) => (
-              <ObservationCard
-                key={observation.id}
-                observation={observation}
-              />
-            ))}
-          </div>
-        </div>
-      </section>
+      <WildlifeShowcase />
 
       {/* Sri Lanka information */}
       <section className="px-6 py-16">
