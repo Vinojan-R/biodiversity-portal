@@ -5,16 +5,26 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
-import { speciesData } from "../data/species";
+import { useEffect, useState } from "react";
+import { apiRequest } from "../services/api";
 
 function SpeciesDetailsPage() {
   const { id } = useParams();
 
-  const species = speciesData.find(
-    (animal) => animal.id === id,
-  );
+  const [species, setSpecies] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  if (!species) {
+  useEffect(() => {
+    apiRequest(`/species/${id}`)
+      .then((response) => setSpecies(response.data.species))
+      .catch((requestError) => setError(requestError.message))
+      .finally(() => setLoading(false));
+  }, [id]);
+
+  if (loading) return <main className="grid min-h-[70vh] place-items-center text-slate-500">Loading species...</main>;
+
+  if (error || !species) {
     return (
       <main className="grid min-h-[70vh] place-items-center px-6">
         <div className="text-center">
@@ -129,6 +139,15 @@ function SpeciesDetailsPage() {
                 </div>
               </div>
             </div>
+
+            {(species.taxonomy || species.diet || species.behavior || species.reproduction || species.threats?.length) && (
+              <div className="mt-9 grid gap-4 border-t border-slate-200 pt-8 sm:grid-cols-2">
+                {species.taxonomy?.family && <div><h2 className="font-black text-slate-900">Taxonomy</h2><p className="mt-1 text-sm text-slate-600">{[species.taxonomy.className, species.taxonomy.order, species.taxonomy.family, species.taxonomy.genus].filter(Boolean).join(" / ")}</p></div>}
+                {species.diet && <div><h2 className="font-black text-slate-900">Diet</h2><p className="mt-1 text-sm text-slate-600">{species.diet}</p></div>}
+                {species.behavior && <div><h2 className="font-black text-slate-900">Behavior</h2><p className="mt-1 text-sm text-slate-600">{species.behavior}</p></div>}
+                {species.reproduction && <div><h2 className="font-black text-slate-900">Reproduction</h2><p className="mt-1 text-sm text-slate-600">{species.reproduction}</p></div>}
+              </div>
+            )}
 
             <div className="mt-9 rounded-2xl border border-amber-200 bg-amber-50 p-5">
               <p className="text-sm leading-6 text-amber-900">

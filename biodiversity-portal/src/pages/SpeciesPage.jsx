@@ -6,11 +6,11 @@ import {
   Squirrel,
   Turtle,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 
 import SpeciesCard from "../components/species/SpeciesCard";
-import { speciesData } from "../data/species";
 import { speciesCategories } from "../data/speciesCategories";
+import { apiRequest, buildQuery } from "../services/api";
 
 const categoryIcons = {
   mammals: Squirrel,
@@ -25,44 +25,25 @@ function SpeciesPage() {
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [endemicFilter, setEndemicFilter] = useState("all");
   const [sortOrder, setSortOrder] = useState("common-name");
+  const [species, setSpecies] = useState([]);
+  const [pagination, setPagination] = useState({ page: 1, pages: 1, total: 0 });
+  const [page, setPage] = useState(1);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  const filteredSpecies = useMemo(() => {
-    const normalizedSearch = searchTerm.trim().toLowerCase();
-
-    const result = speciesData.filter((species) => {
-      const matchesSearch =
-        species.commonName.toLowerCase().includes(normalizedSearch) ||
-        species.scientificName.toLowerCase().includes(normalizedSearch) ||
-        species.habitat.toLowerCase().includes(normalizedSearch) ||
-        species.region.toLowerCase().includes(normalizedSearch);
-
-      const matchesCategory =
-        selectedCategory === "all" ||
-        species.category === selectedCategory;
-
-      const matchesEndemic =
-        endemicFilter === "all" ||
-        (endemicFilter === "endemic" && species.endemic) ||
-        (endemicFilter === "native" && !species.endemic);
-
-      return matchesSearch && matchesCategory && matchesEndemic;
-    });
-
-    return [...result].sort((first, second) => {
-      if (sortOrder === "scientific-name") {
-        return first.scientificName.localeCompare(
-          second.scientificName,
-        );
-      }
-
-      return first.commonName.localeCompare(second.commonName);
-    });
-  }, [
-    searchTerm,
-    selectedCategory,
-    endemicFilter,
-    sortOrder,
-  ]);
+  useEffect(() => {
+    let active = true;
+    apiRequest(`/species?${buildQuery({ search: searchTerm.trim(), category: selectedCategory, endemic: endemicFilter === "all" ? "" : endemicFilter === "endemic", sort: sortOrder, page, limit: 12 })}`)
+      .then((response) => {
+        if (!active) return;
+        setSpecies(response.data.species);
+        setPagination(response.data.pagination);
+        setError("");
+      })
+      .catch((requestError) => active && setError(requestError.message))
+      .finally(() => active && setLoading(false));
+    return () => { active = false; };
+  }, [searchTerm, selectedCategory, endemicFilter, sortOrder, page]);
 
   const activeCategoryInformation =
     selectedCategory === "all"
@@ -76,6 +57,7 @@ function SpeciesPage() {
     setSelectedCategory("all");
     setEndemicFilter("all");
     setSortOrder("common-name");
+    setPage(1);
   }
 
   return (
@@ -106,9 +88,7 @@ function SpeciesPage() {
             <input
               type="search"
               value={searchTerm}
-              onChange={(event) =>
-                setSearchTerm(event.target.value)
-              }
+              onChange={(event) => { setSearchTerm(event.target.value); setPage(1); }}
               placeholder="Search common name, scientific name, habitat or region..."
               className="w-full rounded-2xl bg-white py-4 pr-5 pl-14 text-slate-900 outline-none ring-4 ring-white/10 placeholder:text-slate-400 focus:ring-emerald-300"
             />
@@ -190,9 +170,10 @@ function SpeciesPage() {
 
               <select
                 value={selectedCategory}
-                onChange={(event) =>
-                  setSelectedCategory(event.target.value)
-                }
+                onChange={(event) => {
+                  setSelectedCategory(event.target.value);
+                  setPage(1);
+                }}
                 className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 outline-none focus:border-emerald-700 focus:ring-2 focus:ring-emerald-100"
               >
                 <option value="all">All categories</option>
@@ -215,9 +196,10 @@ function SpeciesPage() {
 
               <select
                 value={endemicFilter}
-                onChange={(event) =>
-                  setEndemicFilter(event.target.value)
-                }
+                onChange={(event) => {
+                  setEndemicFilter(event.target.value);
+                  setPage(1);
+                }}
                 className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 outline-none focus:border-emerald-700"
               >
                 <option value="all">All species</option>
@@ -237,9 +219,10 @@ function SpeciesPage() {
 
               <select
                 value={sortOrder}
-                onChange={(event) =>
-                  setSortOrder(event.target.value)
-                }
+                onChange={(event) => {
+                  setSortOrder(event.target.value);
+                  setPage(1);
+                }}
                 className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 outline-none focus:border-emerald-700"
               >
                 <option value="common-name">
@@ -266,7 +249,7 @@ function SpeciesPage() {
             </p>
 
             <h2 className="mt-2 text-3xl font-black text-slate-900">
-              {filteredSpecies.length} species currently available
+              {pagination.total} species currently available
             </h2>
 
             <p className="mt-2 text-sm text-slate-500">
@@ -285,9 +268,13 @@ function SpeciesPage() {
           </button>
         </div>
 
-        {filteredSpecies.length > 0 ? (
+        {loading ? (
+          <div className="rounded-3xl bg-white px-6 py-20 text-center text-slate-500">Loading species catalogue...</div>
+        ) : error ? (
+          <div className="rounded-3xl bg-red-50 px-6 py-20 text-center text-red-700">{error}</div>
+        ) : species.length > 0 ? (
           <div className="grid gap-7 md:grid-cols-2 xl:grid-cols-3">
-            {filteredSpecies.map((species) => (
+            {species.map((species) => (
               <SpeciesCard
                 key={species.id}
                 species={species}
@@ -316,6 +303,13 @@ function SpeciesPage() {
             >
               Reset search
             </button>
+          </div>
+        )}
+        {!loading && !error && pagination.pages > 1 && (
+          <div className="mt-8 flex items-center justify-center gap-4">
+            <button type="button" disabled={page === 1} onClick={() => setPage((current) => current - 1)} className="rounded-xl border border-slate-300 px-4 py-2 font-bold disabled:opacity-40">Previous</button>
+            <span className="text-sm font-bold text-slate-600">Page {page} of {pagination.pages}</span>
+            <button type="button" disabled={page === pagination.pages} onClick={() => setPage((current) => current + 1)} className="rounded-xl border border-slate-300 px-4 py-2 font-bold disabled:opacity-40">Next</button>
           </div>
         )}
       </section>

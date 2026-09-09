@@ -7,7 +7,9 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "nodemon server.js",
     "start": "node server.js",
-    "make-admin": "node src/utils/make-admin.js"
+    "make-admin": "node src/utils/make-admin.js",
+    "seed:species": "node src/utils/seed-species.js",
+    "seed:admin": "node src/utils/seed-admin.js"
   },
   "keywords": [],
   "author": "",

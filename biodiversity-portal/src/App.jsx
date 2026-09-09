@@ -6,6 +6,7 @@ import Layout from "./components/layout/Layout";
 
 import EducationPage from "./pages/EducationPage";
 import AdminPage from "./pages/AdminPage";
+import AboutPage from "./pages/AboutPage";
 import HomePage from "./pages/HomePage";
 import IdentifyPage from "./pages/IdentifyPage";
 import LandingPage from "./pages/LandingPage";
@@ -15,6 +16,7 @@ import NotFoundPage from "./pages/NotFoundPage";
 import RegisterPage from "./pages/RegisterPage";
 import SpeciesDetailsPage from "./pages/SpeciesDetailsPage";
 import SpeciesPage from "./pages/SpeciesPage";
+import HelpPage from "./pages/HelpPage";
 
 function App() {
   return (
@@ -43,6 +45,8 @@ function App() {
             <Route path="/identify" element={<IdentifyPage />} />
             <Route path="/map" element={<MapPage />} />
             <Route path="/education" element={<EducationPage />} />
+            <Route path="/about" element={<AboutPage />} />
+            <Route path="/help" element={<HelpPage />} />
           </Route>
         </Route>
 

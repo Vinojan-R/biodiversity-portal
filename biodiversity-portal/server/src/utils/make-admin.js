@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 import User from "../models/User.js";
 import { connectDatabase } from "../config/database.js";
 
-const email = globalThis.process.argv[2]?.trim().toLowerCase();
+const email = (globalThis.process.argv[2] || globalThis.process.env.ADMIN_EMAIL)?.trim().toLowerCase();
 
 if (!email) {
   console.error("Usage: npm run make-admin -- user@example.com");
@@ -15,7 +15,7 @@ try {
   const user = await User.findOneAndUpdate(
     { email },
     { role: "admin" },
-    { new: true },
+    { returnDocument: "after" },
   );
 
   if (!user) {

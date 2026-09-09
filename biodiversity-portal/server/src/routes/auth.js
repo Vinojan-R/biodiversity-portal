@@ -43,6 +43,7 @@ router.post("/register", authLimit, async (req, res) => {
 
   const user = await User.create({ ...parsed.data, email, passwordHash: await argon2.hash(parsed.data.password) });
   await establishSession(req, user._id);
+  await User.findByIdAndUpdate(user._id, { lastLogin: new Date() });
   return res.status(201).json({ user: publicUser(user) });
 });
 
@@ -55,6 +56,7 @@ router.post("/login", authLimit, async (req, res) => {
   if (!valid) return res.status(401).json({ message: "Invalid email or password." });
 
   await establishSession(req, user._id);
+  await User.findByIdAndUpdate(user._id, { lastLogin: new Date() });
   return res.json({ user: publicUser(user) });
 });
 
@@ -125,6 +127,7 @@ router.get("/google/callback", async (req, res) => {
 
     if (!user.isActive) throw new Error("This account is suspended.");
     await establishSession(req, user._id);
+    await User.findByIdAndUpdate(user._id, { lastLogin: new Date() });
     return res.redirect(`${frontendUrl}/home`);
   } catch (error) {
     console.error("Google sign-in failed:", error.message);

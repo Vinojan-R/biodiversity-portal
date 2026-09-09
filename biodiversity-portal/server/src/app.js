@@ -5,6 +5,8 @@ import session from "express-session";
 import MongoStore from "connect-mongo";
 import authRoutes from "./routes/auth.js";
 import adminRoutes from "./routes/admin.js";
+import speciesRoutes from "./routes/species.js";
+import observationRoutes from "./routes/observations.js";
 
 const app = express();
 const allowedOrigins = new Set([
@@ -53,6 +55,8 @@ app.use(
 );
 
 app.use("/api/auth", authRoutes);
+app.use("/api/species", speciesRoutes);
+app.use("/api/observations", observationRoutes);
 app.use("/api/admin", adminRoutes);
 
 // Test route
@@ -60,6 +64,15 @@ app.get("/", (req, res) => {
   res.status(200).json({
     success: true,
     message: "Biodiversity Portal API is running",
+  });
+});
+
+app.use((error, _req, res, _next) => {
+  void _next;
+  console.error("API error:", error.message);
+  return res.status(error.statusCode || 500).json({
+    success: false,
+    message: "The server could not complete that request.",
   });
 });
 
