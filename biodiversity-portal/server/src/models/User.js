@@ -11,6 +11,10 @@ const userSchema = new mongoose.Schema(
     isActive: { type: Boolean, default: true },
     isEmailVerified: { type: Boolean, default: false },
     lastLogin: { type: Date },
+    resetOtpHash: { type: String, select: false },
+    resetOtpExpiresAt: { type: Date, select: false },
+    resetOtpAttempts: { type: Number, select: false, default: 0 },
+    resetOtpRequestedAt: { type: Date, select: false },
   },
   { timestamps: true },
 );

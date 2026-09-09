@@ -14,6 +14,7 @@ import LoginPage from "./pages/LoginPage";
 import MapPage from "./pages/MapPage";
 import NotFoundPage from "./pages/NotFoundPage";
 import RegisterPage from "./pages/RegisterPage";
+import ResetPasswordPage from "./pages/ResetPasswordPage";
 import SpeciesDetailsPage from "./pages/SpeciesDetailsPage";
 import SpeciesPage from "./pages/SpeciesPage";
 import HelpPage from "./pages/HelpPage";
@@ -26,6 +27,7 @@ function App() {
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
 
         {/* Routes that require login */}
         <Route element={<ProtectedRoute />}>

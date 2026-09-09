@@ -177,17 +177,19 @@ function LoginPage() {
                     Remember the password
                   </label>
 
-                  <button
-                    type="button"
+                  <Link
+                    to="/reset-password"
                     className="text-left text-sm font-semibold text-cyan-300 hover:underline"
                   >
                     Forgot password?
-                  </button>
+                  </Link>
                 </div>
 
-                {(error || oauthError) && (
+                {(error || oauthError || new URLSearchParams(location.search).get("reset") === "success") && (
                   <p className="rounded-xl border border-red-400/30 bg-red-500/15 px-4 py-3 text-sm text-red-100">
-                    {error || (oauthError === "google_not_configured"
+                    {new URLSearchParams(location.search).get("reset") === "success"
+                      ? "Password reset successfully. Sign in with your new password."
+                      : error || (oauthError === "google_not_configured"
                       ? "Google sign-in needs to be configured in the server environment."
                       : "Google sign-in could not be completed. Please try again.")}
                   </p>

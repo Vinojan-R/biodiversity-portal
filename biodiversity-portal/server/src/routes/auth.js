@@ -5,19 +5,30 @@ import rateLimit from "express-rate-limit";
 import { z } from "zod";
 import User from "../models/User.js";
 import { requireAuth } from "../middleware/auth.js";
+import { isEmailConfigured, sendPasswordResetOtp } from "../utils/mailer.js";
 
 const router = express.Router();
 const authLimit = rateLimit({ windowMs: 15 * 60 * 1000, limit: 15, standardHeaders: true });
+const resetLimit = rateLimit({ windowMs: 15 * 60 * 1000, limit: 5, standardHeaders: true });
 const credentials = z.object({
   email: z.string().trim().email().max(160),
   password: z.string().min(8).max(128),
 });
 const registration = credentials.extend({ name: z.string().trim().min(2).max(80) });
+const resetRequest = z.object({ email: z.string().trim().email().max(160) });
+const resetCompletion = resetRequest.extend({
+  otp: z.string().regex(/^\d{6}$/),
+  password: z.string().min(8).max(128),
+});
 const googleConfig = [
   globalThis.process.env.GOOGLE_CLIENT_ID,
   globalThis.process.env.GOOGLE_CLIENT_SECRET,
   globalThis.process.env.GOOGLE_CALLBACK_URL,
 ];
+
+function hasGoogleConfig() {
+  return googleConfig.every((value) => value && !value.includes("your-") && !value.includes("<"));
+}
 
 function publicUser(user) {
   return { id: user._id, name: user.name, email: user.email, role: user.role };
@@ -63,9 +74,54 @@ router.post("/login", authLimit, async (req, res) => {
 router.post("/logout", (req, res) => req.session.destroy(() => res.status(204).end()));
 router.get("/me", requireAuth, (req, res) => res.json({ user: publicUser(req.user) }));
 
+router.post("/forgot-password", resetLimit, async (req, res) => {
+  const parsed = resetRequest.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ success: false, message: "Enter a valid email address." });
+  if (!isEmailConfigured()) return res.status(503).json({ success: false, message: "Password reset email is not configured on the server." });
+
+  const email = parsed.data.email.toLowerCase();
+  const user = await User.findOne({ email }).select("+resetOtpHash +resetOtpExpiresAt +resetOtpAttempts +resetOtpRequestedAt");
+  if (user) {
+    const otp = String(crypto.randomInt(0, 1000000)).padStart(6, "0");
+    user.resetOtpHash = await argon2.hash(otp);
+    user.resetOtpExpiresAt = new Date(Date.now() + 10 * 60 * 1000);
+    user.resetOtpAttempts = 0;
+    user.resetOtpRequestedAt = new Date();
+    await user.save();
+    await sendPasswordResetOtp({ email, otp });
+  }
+
+  return res.json({ success: true, message: "If an account exists for that email, a reset code has been sent." });
+});
+
+router.post("/reset-password", resetLimit, async (req, res) => {
+  const parsed = resetCompletion.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ success: false, message: "Enter your email, six-digit code, and a password of at least 8 characters." });
+
+  const user = await User.findOne({ email: parsed.data.email.toLowerCase() }).select("+resetOtpHash +resetOtpExpiresAt +resetOtpAttempts");
+  const expired = !user?.resetOtpExpiresAt || user.resetOtpExpiresAt.getTime() < Date.now();
+  if (!user || !user.resetOtpHash || expired || user.resetOtpAttempts >= 5) return res.status(400).json({ success: false, message: "That reset code is invalid or expired. Request a new code." });
+
+  const validOtp = await argon2.verify(user.resetOtpHash, parsed.data.otp);
+  if (!validOtp) {
+    user.resetOtpAttempts += 1;
+    await user.save();
+    return res.status(400).json({ success: false, message: "That reset code is invalid or expired. Request a new code." });
+  }
+
+  user.passwordHash = await argon2.hash(parsed.data.password);
+  user.resetOtpHash = undefined;
+  user.resetOtpExpiresAt = undefined;
+  user.resetOtpAttempts = 0;
+  user.resetOtpRequestedAt = undefined;
+  await user.save();
+  await establishSession(req, user._id);
+  return res.json({ success: true, user: publicUser(user) });
+});
+
 router.get("/google", (req, res) => {
   const frontendUrl = globalThis.process.env.CLIENT_URL || "http://localhost:5173";
-  if (googleConfig.some((value) => !value)) {
+  if (!hasGoogleConfig()) {
     return res.redirect(`${frontendUrl}/login?oauth_error=google_not_configured`);
   }
 
@@ -84,7 +140,7 @@ router.get("/google", (req, res) => {
 });
 
 router.get("/google/callback", async (req, res) => {
-  const frontendUrl = globalThis.process.env.CLIENT_URL || "http://localhost:5174";
+  const frontendUrl = globalThis.process.env.CLIENT_URL || "http://localhost:5173";
   const { code, state } = req.query;
   if (!code || !state || state !== req.session.googleOAuthState) {
     return res.redirect(`${frontendUrl}/login?oauth_error=invalid_state`);
@@ -119,10 +175,12 @@ router.get("/google/callback", async (req, res) => {
     if (user?.googleId && user.googleId !== profile.sub) throw new Error("This email is linked to another Google account.");
     if (user) {
       user.googleId = profile.sub;
+      user.isEmailVerified = true;
+      user.profileImageUrl = profile.picture;
       if (!user.name && profile.name) user.name = profile.name;
       await user.save();
     } else {
-      user = await User.create({ name: profile.name || profile.email.split("@")[0], email: profile.email.toLowerCase(), googleId: profile.sub });
+      user = await User.create({ name: profile.name || profile.email.split("@")[0], email: profile.email.toLowerCase(), googleId: profile.sub, profileImageUrl: profile.picture, isEmailVerified: true });
     }
 
     if (!user.isActive) throw new Error("This account is suspended.");
