@@ -16,12 +16,12 @@ try {
   await connectDatabase();
   const existing = await User.findOne({ email }).select("+passwordHash");
   if (existing) {
-    existing.role = "admin";
+    existing.role = "ADMIN";
     existing.isActive = true;
     await existing.save();
     console.log(`${email} already existed and is now an administrator.`);
   } else {
-    await User.create({ name: "Portal Administrator", email, passwordHash: await argon2.hash(password), role: "admin", isEmailVerified: true });
+    await User.create({ name: "Portal Administrator", email, passwordHash: await argon2.hash(password), role: "ADMIN", isEmailVerified: true });
     console.log(`${email} development administrator created.`);
   }
 } catch (error) {

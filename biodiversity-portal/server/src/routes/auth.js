@@ -6,6 +6,7 @@ import { z } from "zod";
 import User from "../models/User.js";
 import { requireAuth } from "../middleware/auth.js";
 import { isEmailConfigured, sendPasswordResetOtp } from "../utils/mailer.js";
+import { normalizeRole } from "../utils/permissions.js";
 
 const router = express.Router();
 const authLimit = rateLimit({ windowMs: 15 * 60 * 1000, limit: 15, standardHeaders: true });
@@ -31,7 +32,7 @@ function hasGoogleConfig() {
 }
 
 function publicUser(user) {
-  return { id: user._id, name: user.name, email: user.email, role: user.role };
+  return { id: user._id, name: user.name, email: user.email, role: normalizeRole(user.role) };
 }
 
 function establishSession(req, userId) {

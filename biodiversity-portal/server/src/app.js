@@ -5,6 +5,7 @@ import session from "express-session";
 import MongoStore from "connect-mongo";
 import authRoutes from "./routes/auth.js";
 import adminRoutes from "./routes/admin.js";
+import adminContentRoutes from "./routes/adminContent.js";
 import speciesRoutes from "./routes/species.js";
 import observationRoutes from "./routes/observations.js";
 
@@ -58,6 +59,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/species", speciesRoutes);
 app.use("/api/observations", observationRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/admin", adminContentRoutes);
 
 // Test route
 app.get("/", (req, res) => {

@@ -7,7 +7,7 @@ const userSchema = new mongoose.Schema(
     passwordHash: { type: String, select: false },
     googleId: { type: String, unique: true, sparse: true, select: false },
     profileImageUrl: { type: String, trim: true, maxlength: 500 },
-    role: { type: String, enum: ["user", "admin"], default: "user" },
+    role: { type: String, enum: ["USER", "CONTRIBUTOR", "MODERATOR", "ADMIN", "SUPER_ADMIN", "user", "admin", "researcher"], default: "USER" },
     isActive: { type: Boolean, default: true },
     isEmailVerified: { type: Boolean, default: false },
     lastLogin: { type: Date },

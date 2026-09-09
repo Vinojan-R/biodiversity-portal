@@ -222,13 +222,13 @@ function NewsCard({ article }) {
           {article.description}
         </p>
 
-        <button
-          type="button"
+        <Link
+          to="/learn?focus=news"
           className="mt-4 inline-flex items-center gap-2 font-bold text-emerald-900 hover:underline"
         >
           Read more
           <ArrowUpRight size={17} />
-        </button>
+        </Link>
       </div>
     </article>
   );
@@ -498,8 +498,9 @@ function HomePage() {
         <div className="mx-auto grid max-w-6xl gap-12 lg:grid-cols-[1.4fr_1fr]">
           <div className="space-y-5">
             {events.map((event) => (
-              <article
+              <Link
                 key={event.id}
+                to="/learn?focus=days"
                 className="grid overflow-hidden bg-white shadow-sm sm:grid-cols-[150px_1fr]"
               >
                 <div className="bg-emerald-950 px-5 py-4 text-white">
@@ -521,7 +522,7 @@ function HomePage() {
                     {event.title}
                   </h3>
                 </div>
-              </article>
+              </Link>
             ))}
           </div>
 

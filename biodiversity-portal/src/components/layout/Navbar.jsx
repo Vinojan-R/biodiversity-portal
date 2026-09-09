@@ -95,14 +95,14 @@ function Navbar() {
           </NavLink>
 
           <NavLink
-            to="/education"
+            to="/learn"
             className={linkClass}
             onClick={() => setMenuOpen(false)}
           >
             Learn
           </NavLink>
 
-          {user?.role === "admin" && (
+          {["ADMIN", "SUPER_ADMIN"].includes(user?.role) && (
             <NavLink to="/admin" className={linkClass} onClick={() => setMenuOpen(false)}>
               Admin
             </NavLink>

@@ -4,7 +4,7 @@ import ProtectedRoute from "./components/auth/ProtectedRoute";
 import AdminRoute from "./components/auth/AdminRoute";
 import Layout from "./components/layout/Layout";
 
-import EducationPage from "./pages/EducationPage";
+import LearnPage from "./pages/LearnPage";
 import AdminPage from "./pages/AdminPage";
 import AboutPage from "./pages/AboutPage";
 import HomePage from "./pages/HomePage";
@@ -46,7 +46,8 @@ function App() {
 
             <Route path="/identify" element={<IdentifyPage />} />
             <Route path="/map" element={<MapPage />} />
-            <Route path="/education" element={<EducationPage />} />
+            <Route path="/learn" element={<LearnPage />} />
+            <Route path="/education" element={<LearnPage />} />
             <Route path="/about" element={<AboutPage />} />
             <Route path="/help" element={<HelpPage />} />
           </Route>

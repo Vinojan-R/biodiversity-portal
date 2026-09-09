@@ -14,7 +14,7 @@ try {
   await connectDatabase();
   const user = await User.findOneAndUpdate(
     { email },
-    { role: "admin" },
+    { role: "ADMIN" },
     { returnDocument: "after" },
   );
 
