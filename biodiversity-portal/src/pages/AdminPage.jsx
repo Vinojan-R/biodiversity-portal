@@ -82,6 +82,9 @@ function AdminPage() {
   });
   const [speciesForm, setSpeciesForm] = useState(initialSpecies);
   const [editingSpeciesId, setEditingSpeciesId] = useState(null);
+  const [speciesSearch, setSpeciesSearch] = useState("");
+  const [speciesCategory, setSpeciesCategory] = useState("all");
+  const [speciesEndemic, setSpeciesEndemic] = useState("all");
   const [newsForm, setNewsForm] = useState(initialNews);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -197,6 +200,13 @@ function AdminPage() {
       [name]: type === "checkbox" ? checked : value,
     }));
   }
+  const filteredSpecies = data.species.filter((species) => {
+    const query = speciesSearch.trim().toLowerCase();
+    const matchesSearch = !query || [species.commonName, species.scientificName, species.slug, species.habitat, species.distribution?.region].some((value) => value?.toLowerCase().includes(query));
+    const matchesCategory = speciesCategory === "all" || species.category === speciesCategory;
+    const matchesEndemic = speciesEndemic === "all" || String(Boolean(species.endemic)) === speciesEndemic;
+    return matchesSearch && matchesCategory && matchesEndemic;
+  });
   const title = navItems.find(([id]) => id === section)?.[1] || "Dashboard";
 
   return (
@@ -470,10 +480,43 @@ function AdminPage() {
               <TableState>
                 <div className="p-5">
                   <h2 className="text-lg font-black">
-                    Catalogue ({data.species.length})
+                    Catalogue ({filteredSpecies.length} of {data.species.length})
                   </h2>
+                  <div className="mt-4 grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto_auto]">
+                    <input
+                      type="search"
+                      value={speciesSearch}
+                      onChange={(event) => setSpeciesSearch(event.target.value)}
+                      placeholder="Search by name, slug, habitat..."
+                      aria-label="Search species"
+                      className="rounded-xl border border-slate-300 px-3 py-2.5"
+                    />
+                    <select
+                      value={speciesCategory}
+                      onChange={(event) => setSpeciesCategory(event.target.value)}
+                      aria-label="Filter species by category"
+                      className="rounded-xl border border-slate-300 px-3 py-2.5"
+                    >
+                      <option value="all">All categories</option>
+                      <option value="mammals">Mammals</option>
+                      <option value="birds">Birds</option>
+                      <option value="amphibians">Amphibians</option>
+                      <option value="reptiles">Reptiles</option>
+                      <option value="sea-creatures">Sea creatures</option>
+                    </select>
+                    <select
+                      value={speciesEndemic}
+                      onChange={(event) => setSpeciesEndemic(event.target.value)}
+                      aria-label="Filter species by endemic status"
+                      className="rounded-xl border border-slate-300 px-3 py-2.5"
+                    >
+                      <option value="all">All statuses</option>
+                      <option value="true">Endemic</option>
+                      <option value="false">Non-endemic</option>
+                    </select>
+                  </div>
                   <div className="mt-4 divide-y">
-                    {data.species.map((item) => (
+                    {filteredSpecies.map((item) => (
                       <div
                         key={item._id}
                         className="flex items-center justify-between gap-4 py-3 text-sm"
@@ -507,6 +550,11 @@ function AdminPage() {
                         </span>
                       </div>
                     ))}
+                    {!filteredSpecies.length && (
+                      <p className="py-8 text-center text-sm text-slate-500">
+                        No species match these filters.
+                      </p>
+                    )}
                   </div>
                 </div>
               </TableState>
