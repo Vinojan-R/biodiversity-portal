@@ -88,7 +88,7 @@ router.delete("/animals/:id", async (req, res) => {
 });
 
 router.get("/species", async (_req, res) => {
-  const species = await Species.find().sort({ commonName: 1 }).lean();
+  const species = await Species.find({ isPublished: { $ne: false } }).sort({ commonName: 1 }).lean();
   return res.json({ success: true, data: { species } });
 });
 router.post("/species", async (req, res) => {
