@@ -11,6 +11,7 @@
     "seed:species": "node src/utils/seed-species.js",
     "seed:mammals": "node src/utils/seed-mammals.js",
     "seed:birds": "node src/utils/seed-birds.js",
+    "import:amphibians": "node src/utils/import-amphibians-pdf.js",
     "seed:admin": "node src/utils/seed-admin.js",
     "validate": "for file in server.js src/app.js src/config/*.js src/models/*.js src/routes/*.js src/utils/*.js; do node --check \"$file\" || exit 1; done"
   },

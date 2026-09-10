@@ -144,8 +144,10 @@ function AdminPage() {
     try {
       await apiRequest(path, options);
       await load();
+      return true;
     } catch (requestError) {
       setError(requestError.message);
+      return false;
     } finally {
       setBusy(false);
     }
@@ -155,10 +157,11 @@ function AdminPage() {
     const path = editingSpeciesId
       ? `/admin/species/${editingSpeciesId}`
       : "/admin/species";
-    await mutate(path, {
+    const saved = await mutate(path, {
       method: editingSpeciesId ? "PATCH" : "POST",
       body: JSON.stringify(speciesForm),
     });
+    if (!saved) return;
     setSpeciesForm(initialSpecies);
     setEditingSpeciesId(null);
   }
@@ -187,10 +190,11 @@ function AdminPage() {
   }
   async function saveNews(event) {
     event.preventDefault();
-    await mutate("/admin/news", {
+    const saved = await mutate("/admin/news", {
       method: "POST",
       body: JSON.stringify(newsForm),
     });
+    if (!saved) return;
     setNewsForm(initialNews);
   }
   function setForm(setter, event) {

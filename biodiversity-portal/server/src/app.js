@@ -71,10 +71,38 @@ app.get("/", (req, res) => {
 
 app.use((error, _req, res, _next) => {
   void _next;
-  console.error("API error:", error.message);
+  console.error("API error:", error);
+
+  if (error.code === 11000) {
+    const duplicateField = Object.keys(error.keyPattern || error.keyValue || {})[0] || "value";
+    return res.status(409).json({
+      success: false,
+      message: `A record with this ${duplicateField} already exists.`,
+    });
+  }
+
+  if (error.name === "ValidationError") {
+    const message = Object.values(error.errors || {})
+      .map((validationError) => validationError.message)
+      .join(" ");
+    return res.status(400).json({
+      success: false,
+      message: message || "The submitted data is invalid.",
+    });
+  }
+
+  if (error.name === "CastError") {
+    return res.status(400).json({
+      success: false,
+      message: `Invalid ${error.path || "data"} value.`,
+    });
+  }
+
   return res.status(error.statusCode || 500).json({
     success: false,
-    message: "The server could not complete that request.",
+    message: globalThis.process.env.NODE_ENV === "production"
+      ? "The server could not complete that request."
+      : error.message || "The server could not complete that request.",
   });
 });
 
