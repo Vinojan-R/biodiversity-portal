@@ -119,6 +119,16 @@ const mammals = [
     image: "https://static.inaturalist.org/photos/534787510/medium.jpg",
     photographer: "Nuwan Chathuranga via iNaturalist",
   },
+  {
+    commonName: "Sri Lankan Elephant",
+    scientificName: "Elephas maximus maximus",
+    conservationStatus: "Endangered",
+  },
+  {
+    commonName: "Sri Lankan Leopard",
+    scientificName: "Panthera pardus kotiya",
+    conservationStatus: "Vulnerable",
+  },
 ];
 
 function slugify(value) {
@@ -127,6 +137,7 @@ function slugify(value) {
 
 try {
   await connectDatabase();
+  await Species.deleteMany({ category: "mammals" });
   for (const item of mammals) {
     const reference = {
       title: `${item.scientificName} taxon record and image source`,
@@ -134,7 +145,7 @@ try {
       source: item.photographer ? `iNaturalist; image attribution: ${item.photographer}${item.license ? `; ${item.license}` : ""}` : "iNaturalist taxon lookup; no default photo available",
     };
     await Species.findOneAndUpdate(
-      { slug: slugify(item.commonName) },
+      { scientificName: item.scientificName },
       {
         slug: slugify(item.commonName),
         commonName: item.commonName,

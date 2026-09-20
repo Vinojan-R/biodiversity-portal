@@ -9,6 +9,7 @@ const speciesSchema = new mongoose.Schema(
     speciesCode: { type: String, trim: true, uppercase: true, maxlength: 40, index: true },
     image: { type: String, trim: true, maxlength: 500 },
     category: { type: String, required: true, trim: true, lowercase: true, index: true },
+    subcategory: { type: String, trim: true, lowercase: true, index: true },
     endemic: { type: Boolean, default: true, index: true },
     endemicStatus: { type: String, trim: true, maxlength: 120 },
     conservationStatus: { type: String, trim: true, maxlength: 120, index: true },

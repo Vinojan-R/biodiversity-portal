@@ -2,7 +2,7 @@ export const speciesCategories = [
   {
     id: "mammals",
     name: "Mammals",
-    count: 103,
+    count: 23,
     description:
       "Explore terrestrial and marine mammals recorded in Sri Lanka.",
     icon: "🐘",
@@ -26,7 +26,7 @@ export const speciesCategories = [
   {
     id: "reptiles",
     name: "Reptiles",
-    count: 25,
+    count: 169,
     description:
       "Learn about endemic lizards, geckos, snakes and other reptiles.",
     icon: "🦎",
