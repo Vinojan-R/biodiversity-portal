@@ -7,6 +7,7 @@ import {
   Turtle,
 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 
 import SpeciesCard from "../components/species/SpeciesCard";
 import { speciesCategories } from "../data/speciesCategories";
@@ -21,8 +22,10 @@ const categoryIcons = {
 };
 
 function SpeciesPage() {
+  const [searchParams] = useSearchParams();
+  const categoryFromUrl = searchParams.get("category");
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [selectedCategory, setSelectedCategory] = useState(categoryFromUrl || "all");
   const [endemicFilter, setEndemicFilter] = useState("all");
   const [sortOrder, setSortOrder] = useState("common-name");
   const [species, setSpecies] = useState([]);
@@ -30,6 +33,11 @@ function SpeciesPage() {
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    setSelectedCategory(categoryFromUrl || "all");
+    setPage(1);
+  }, [categoryFromUrl]);
 
   useEffect(() => {
     let active = true;

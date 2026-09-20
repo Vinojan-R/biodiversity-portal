@@ -10,7 +10,7 @@ export const speciesCategories = [
   {
     id: "birds",
     name: "Birds",
-    count: 72,
+    count: 32,
     description:
       "Discover endemic and native resident birds found across Sri Lanka.",
     icon: "🦜",
@@ -18,7 +18,7 @@ export const speciesCategories = [
   {
     id: "amphibians",
     name: "Amphibians",
-    count: 35,
+    count: 107,
     description:
       "Explore frogs and other amphibians associated with forests and wetlands.",
     icon: "🐸",
@@ -26,7 +26,7 @@ export const speciesCategories = [
   {
     id: "reptiles",
     name: "Reptiles",
-    count: 169,
+    count: 170,
     description:
       "Learn about endemic lizards, geckos, snakes and other reptiles.",
     icon: "🦎",
@@ -34,7 +34,7 @@ export const speciesCategories = [
   {
     id: "sea-creatures",
     name: "Sea Creatures",
-    count: 42,
+    count: 61,
     description:
       "Explore marine mammals, turtles, fish and other ocean wildlife.",
     icon: "🐋",

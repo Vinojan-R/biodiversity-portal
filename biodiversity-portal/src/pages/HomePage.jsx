@@ -29,37 +29,42 @@ import leopardDayImage from "../assets/images/home/leopard-day.png";
 const animalCategories = [
   {
     id: 1,
+    categoryId: "amphibians",
     name: "Amphibians",
-    count: "50 species",
+    count: "107 species",
     image: amphibianImage,
     position: "lg:col-start-1 lg:row-start-1",
   },
   {
     id: 2,
+    categoryId: "mammals",
     name: "Mammals",
-    count: "105 species",
+    count: "23 species",
     image: mammalImage,
     position: "lg:col-start-2 lg:row-span-2 lg:row-start-1",
     large: true,
   },
   {
     id: 3,
+    categoryId: "reptiles",
     name: "Reptiles",
-    count: "25 species",
+    count: "170 species",
     image: reptileImage,
     position: "lg:col-start-3 lg:row-start-1",
   },
   {
     id: 4,
+    categoryId: "birds",
     name: "Birds",
-    count: "79 species",
+    count: "32 species",
     image: birdImage,
     position: "lg:col-start-1 lg:row-start-2",
   },
   {
     id: 5,
+    categoryId: "sea-creatures",
     name: "Sea creatures",
-    count: "42 species",
+    count: "61 species",
     image: seaCreatureImage,
     position: "lg:col-start-3 lg:row-start-2",
   },
@@ -170,7 +175,7 @@ function CategoryCircle({ category }) {
 
   return (
     <Link
-      to="/species"
+      to={`/species?category=${category.categoryId}`}
       className={`group relative mx-auto overflow-hidden rounded-full border-4 border-emerald-950 shadow-lg ${size} ${category.position}`}
     >
       <img
