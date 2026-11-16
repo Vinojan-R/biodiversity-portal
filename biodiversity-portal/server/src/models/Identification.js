@@ -3,10 +3,11 @@ import mongoose from "mongoose";
 const identificationSchema = new mongoose.Schema(
   {
     userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true, index: true },
-    imageUrl: { type: String, required: true },
+    imageUrl: { type: String },
     predictedSpeciesId: { type: mongoose.Schema.Types.ObjectId, ref: "Species" },
-    confidence: { type: Number, min: 0, max: 1 },
-    modelVersion: String,
+    provider: { type: String, trim: true },
+    modelVersion: { type: String, trim: true },
+    result: { type: mongoose.Schema.Types.Mixed },
   },
   { timestamps: true },
 );

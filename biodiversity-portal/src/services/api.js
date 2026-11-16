@@ -21,3 +21,12 @@ export async function apiRequest(path, options = {}) {
   if (!response.ok) throw new Error(body.message || "Something went wrong.");
   return body;
 }
+
+export async function identifyAnimal(image) {
+  const formData = new FormData();
+  formData.append("image", image);
+  const response = await fetch(`${API_URL}/animal-identification/identify`, { method: "POST", credentials: "include", body: formData });
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(body.message || "The image could not be analysed.");
+  return body;
+}

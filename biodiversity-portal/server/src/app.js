@@ -8,6 +8,7 @@ import adminRoutes from "./routes/admin.js";
 import adminContentRoutes from "./routes/adminContent.js";
 import speciesRoutes from "./routes/species.js";
 import observationRoutes from "./routes/observations.js";
+import animalIdentificationRoutes from "./routes/animalIdentification.js";
 
 const app = express();
 const allowedOrigins = new Set([
@@ -58,6 +59,7 @@ app.use(
 app.use("/api/auth", authRoutes);
 app.use("/api/species", speciesRoutes);
 app.use("/api/observations", observationRoutes);
+app.use("/api/animal-identification", animalIdentificationRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/admin", adminContentRoutes);
 
