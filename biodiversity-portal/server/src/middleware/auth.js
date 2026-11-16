@@ -27,7 +27,7 @@ export function requireAdmin(req, res, next) {
 
 export function requirePermission(permission) {
   return (req, res, next) => {
-    if (!hasPermission(req.user?.role, permission)) return res.status(403).json({ message: "You do not have permission for this action." });
+    if (!hasPermission(req.user?.role, permission, req.user?.adminPermissions)) return res.status(403).json({ message: "You do not have permission for this action." });
     return next();
   };
 }

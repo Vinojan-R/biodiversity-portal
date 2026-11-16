@@ -3,9 +3,13 @@ import OpenAI from "openai";
 import { z } from "zod";
 
 const identificationSchema = z.object({
+  animal_detected: z.boolean(),
   animal_group: z.enum(["snake", "lizard", "gecko", "frog", "unknown"]),
+  animal_category: z.string().trim().max(80),
   common_name: z.string().trim().max(160),
   scientific_name: z.string().trim().max(200),
+  possible_family: z.string().trim().max(120),
+  confidence: z.number().min(0).max(1),
   possible_species: z.array(z.string().trim().max(200)).max(5),
   is_sri_lankan_endemic: z.enum(["yes", "no", "unknown"]),
   identification_status: z.enum(["possible_match", "uncertain", "unidentified"]),
@@ -16,21 +20,25 @@ const identificationSchema = z.object({
 const responseSchema = {
   type: "object",
   properties: {
+    animal_detected: { type: "boolean" },
     animal_group: { type: "string", enum: ["snake", "lizard", "gecko", "frog", "unknown"] },
+    animal_category: { type: "string" },
     common_name: { type: "string" },
     scientific_name: { type: "string" },
+    possible_family: { type: "string" },
+    confidence: { type: "number", minimum: 0, maximum: 1 },
     possible_species: { type: "array", items: { type: "string" }, maxItems: 5 },
     is_sri_lankan_endemic: { type: "string", enum: ["yes", "no", "unknown"] },
     identification_status: { type: "string", enum: ["possible_match", "uncertain", "unidentified"] },
     visual_evidence: { type: "array", items: { type: "string" }, maxItems: 8 },
     limitations: { type: "array", items: { type: "string" }, maxItems: 8 },
   },
-  required: ["animal_group", "common_name", "scientific_name", "possible_species", "is_sri_lankan_endemic", "identification_status", "visual_evidence", "limitations"],
+  required: ["animal_detected", "animal_group", "animal_category", "common_name", "scientific_name", "possible_family", "confidence", "possible_species", "is_sri_lankan_endemic", "identification_status", "visual_evidence", "limitations"],
   additionalProperties: false,
 };
 
 const prompt = `You are an assistant for a Sri Lankan biodiversity education portal. Analyse the wildlife photograph conservatively.
-Return only JSON matching the supplied schema. Identify only when visible evidence supports a possible identification. Otherwise use unknown or unidentified and empty names. Never invent a species, scientific name, endemic status, conservation status, or confidence score. Do not claim scientific confirmation. The supported groups are snake, lizard, gecko, frog, and unknown. Mention uncertainty or image limitations in limitations. Never advise approaching or handling the animal.`;
+Return only JSON matching the supplied schema. Set animal_detected false for non-animal images and leave names empty. Identify only when visible evidence supports a possible identification. Otherwise use unknown or unidentified and empty names. Never invent a species, scientific name, endemic status, conservation status, or confidence score. Confidence is an uncalibrated visual estimate and must be low when uncertain. Do not claim scientific confirmation. The supported groups are snake, lizard, gecko, frog, and unknown. Mention uncertainty or image limitations in limitations. Never advise approaching or handling the animal.`;
 
 function parseProviderJson(value) {
   const text = String(value || "").replace(/^```json\s*/i, "").replace(/\s*```$/, "").trim();

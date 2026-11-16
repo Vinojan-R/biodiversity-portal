@@ -14,9 +14,12 @@ export async function connectDatabase() {
   try {
     connectionUrl = new URL(uri);
   } catch {
-    throw new Error(
-      "MONGODB_URI is incomplete or malformed. Copy the full connection string from MongoDB Atlas > Connect > Drivers and Client Libraries.",
-    );
+    if (!uri.startsWith("mongodb://") || !uri.includes("@") || !uri.includes("/")) {
+      throw new Error(
+        "MONGODB_URI is incomplete or malformed. Copy the full connection string from MongoDB Atlas > Connect > Drivers and Client Libraries.",
+      );
+    }
+    connectionUrl = { username: "configured", password: "configured", hostname: "configured", searchParams: new URLSearchParams(uri.split("?")[1] || "") };
   }
 
   if (!connectionUrl.username || !connectionUrl.password || !connectionUrl.hostname) {

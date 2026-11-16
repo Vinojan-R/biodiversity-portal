@@ -17,4 +17,7 @@ const observationSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
+observationSchema.index({ verificationStatus: 1, speciesId: 1, observedAt: -1 });
+observationSchema.index({ latitude: 1, longitude: 1 });
+
 export default mongoose.model("Observation", observationSchema);

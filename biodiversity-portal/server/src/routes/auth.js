@@ -32,7 +32,7 @@ function hasGoogleConfig() {
 }
 
 function publicUser(user) {
-  return { id: user._id, name: user.name, email: user.email, role: normalizeRole(user.role) };
+  return { id: user._id, name: user.name, username: user.username || "", email: user.email, role: normalizeRole(user.role), profileImageUrl: user.profileImageUrl || "" };
 }
 
 function establishSession(req, userId) {

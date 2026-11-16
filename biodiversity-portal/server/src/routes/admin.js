@@ -50,8 +50,8 @@ router.patch("/users/:id/status", requirePermission("users.suspend"), async (req
   if (!user) return res.status(404).json({ message: "User not found." });
   return res.json({ user });
 });
-router.patch("/users/:id/role", async (req, res) => {
-  const role = z.enum(["USER", "CONTRIBUTOR", "MODERATOR", "ADMIN", "SUPER_ADMIN"]).safeParse(String(req.body.role || "").toUpperCase());
+router.patch("/users/:id/role", requirePermission("admins.manage"), async (req, res) => {
+  const role = z.enum(["USER", "CONTRIBUTOR", "MODERATOR", "RESEARCHER", "ADMIN", "SUPER_ADMIN"]).safeParse(String(req.body.role || "").toUpperCase());
   if (!role.success) return res.status(400).json({ success: false, message: "Invalid role." });
   if (role.data === "SUPER_ADMIN" && normalizeRole(req.user.role) !== "SUPER_ADMIN") return res.status(403).json({ success: false, message: "Only a Super Admin can assign Super Admin." });
   const target = await User.findById(req.params.id).lean();
@@ -59,6 +59,16 @@ router.patch("/users/:id/role", async (req, res) => {
   const user = await User.findByIdAndUpdate(req.params.id, { role: role.data }, { new: true }).select("-passwordHash");
   if (!user) return res.status(404).json({ success: false, message: "User not found." });
   await AuditLog.create({ adminUserId: req.user._id, action: "changed_role", targetType: "user", targetId: user._id, details: { role: role.data } });
+  return res.json({ success: true, data: { user } });
+});
+router.patch("/users/:id/permissions", requirePermission("admins.manage"), async (req, res) => {
+  const permissions = z.array(z.string().trim().min(1).max(80)).max(50).safeParse(req.body.permissions);
+  if (!permissions.success) return res.status(400).json({ success: false, message: "Provide a valid permission list." });
+  const target = await User.findById(req.params.id).lean();
+  if (!target) return res.status(404).json({ success: false, message: "User not found." });
+  if (normalizeRole(target.role) === "SUPER_ADMIN" || normalizeRole(req.user.role) !== "SUPER_ADMIN") return res.status(403).json({ success: false, message: "Only a Super Admin can modify administrator permissions." });
+  const user = await User.findByIdAndUpdate(target._id, { adminPermissions: permissions.data }, { new: true }).select("-passwordHash").lean();
+  await AuditLog.create({ adminUserId: req.user._id, action: "changed_admin_permissions", targetType: "user", targetId: user._id, details: { permissions: permissions.data } });
   return res.json({ success: true, data: { user } });
 });
 router.delete("/users/:id", requirePermission("users.delete"), async (req, res) => {

@@ -18,6 +18,11 @@ import ResetPasswordPage from "./pages/ResetPasswordPage";
 import SpeciesDetailsPage from "./pages/SpeciesDetailsPage";
 import SpeciesPage from "./pages/SpeciesPage";
 import HelpPage from "./pages/HelpPage";
+import ProfilePage from "./pages/ProfilePage";
+import SettingsPage from "./pages/SettingsPage";
+import ObservationDetailsPage from "./pages/ObservationDetailsPage";
+import ExpertApplicationPage from "./pages/ExpertApplicationPage";
+import ChatPage from "./pages/ChatPage";
 
 function App() {
   return (
@@ -28,6 +33,9 @@ function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />
+        <Route element={<Layout />}>
+          <Route path="/map" element={<MapPage />} />
+        </Route>
 
         {/* Routes that require login */}
         <Route element={<ProtectedRoute />}>
@@ -45,11 +53,15 @@ function App() {
             />
 
             <Route path="/identify" element={<IdentifyPage />} />
-            <Route path="/map" element={<MapPage />} />
+            <Route path="/observations/:id" element={<ObservationDetailsPage />} />
             <Route path="/learn" element={<LearnPage />} />
             <Route path="/education" element={<LearnPage />} />
             <Route path="/about" element={<AboutPage />} />
             <Route path="/help" element={<HelpPage />} />
+            <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/settings" element={<SettingsPage />} />
+            <Route path="/expert-application" element={<ExpertApplicationPage />} />
+            <Route path="/chat" element={<ChatPage />} />
           </Route>
         </Route>
 

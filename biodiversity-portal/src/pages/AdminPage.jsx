@@ -47,7 +47,10 @@ const navItems = [
   ["reviews", "Submissions & reports", ClipboardCheck],
   ["security", "Audit logs", Shield],
   ["analytics", "Analytics", BarChart3],
+  ["experts", "Expert applications", Shield],
+  ["admin-management", "Admin management", Shield],
 ];
+const adminPermissionOptions = ["users.read", "users.update", "users.suspend", "news.create", "news.update", "news.publish", "species.create", "species.update", "expert.view", "expert.review", "chat.manage"];
 
 function StatCard({ label, value }) {
   return (
@@ -79,6 +82,7 @@ function AdminPage() {
     submissions: [],
     reports: [],
     logs: [],
+    expertApplications: [],
   });
   const [speciesForm, setSpeciesForm] = useState(initialSpecies);
   const [editingSpeciesId, setEditingSpeciesId] = useState(null);
@@ -102,6 +106,7 @@ function AdminPage() {
         submissions,
         reports,
         logs,
+        expertApplications,
       ] = await Promise.all([
         apiRequest("/admin/dashboard"),
         apiRequest("/admin/content-summary"),
@@ -115,6 +120,7 @@ function AdminPage() {
         })),
         apiRequest("/admin/reports").catch(() => ({ data: { reports: [] } })),
         apiRequest("/admin/audit-logs").catch(() => ({ data: { logs: [] } })),
+        apiRequest("/expert-applications").catch(() => ({ data: { applications: [] } })),
       ]);
       setData({
         stats: { ...dashboard.data, ...summary.data },
@@ -126,6 +132,7 @@ function AdminPage() {
         submissions: submissions.data.submissions,
         reports: reports.data.reports,
         logs: logs.data.logs,
+        expertApplications: expertApplications.data.applications,
       });
     } catch (loadError) {
       setError(loadError.message);
@@ -197,6 +204,18 @@ function AdminPage() {
     if (!saved) return;
     setNewsForm(initialNews);
   }
+  async function reviewExpert(application, status) {
+    await mutate(`/expert-applications/${application._id}/review`, { method: "PATCH", body: JSON.stringify({ status, reviewNotes: window.prompt("Review notes", application.reviewNotes || "") || "" }) });
+  }
+  async function changeRole(userId, role) {
+    await mutate(`/admin/users/${userId}/role`, { method: "PATCH", body: JSON.stringify({ role }) });
+  }
+  async function changePermissions(userItem) {
+    const current = userItem.adminPermissions || [];
+    const value = window.prompt(`Permissions, comma separated:\n${adminPermissionOptions.join(", ")}`, current.join(","));
+    if (value === null) return;
+    await mutate(`/admin/users/${userItem._id}/permissions`, { method: "PATCH", body: JSON.stringify({ permissions: value.split(",").map((item) => item.trim()).filter(Boolean) }) });
+  }
   function setForm(setter, event) {
     const { name, value, type, checked } = event.target;
     setter((current) => ({
@@ -235,7 +254,7 @@ function AdminPage() {
           </button>
         </div>
         <nav className="space-y-1 p-3" aria-label="Admin navigation">
-          {navItems.map(([id, label, Icon]) => (
+          {navItems.filter(([id]) => id !== "admin-management" || user?.role === "SUPER_ADMIN").map(([id, label, Icon]) => (
             <button
               key={id}
               type="button"
@@ -387,6 +406,7 @@ function AdminPage() {
                           >
                             {item.isActive ? "Suspend" : "Restore"}
                           </button>
+                          {user?.role === "SUPER_ADMIN" && <select value={item.role} onChange={(event) => changeRole(item._id, event.target.value)} className="ml-3 rounded border border-slate-300 px-2 py-1 text-xs"><option>USER</option><option>RESEARCHER</option><option>ADMIN</option><option>SUPER_ADMIN</option></select>}
                         </td>
                       </tr>
                     ))}
@@ -395,6 +415,8 @@ function AdminPage() {
               </div>
             </TableState>
           )}
+          {section === "experts" && <TableState><div className="p-5"><h2 className="text-lg font-black">Expert applications ({data.expertApplications.length})</h2>{data.expertApplications.map((application) => <div key={application._id} className="flex flex-wrap items-center justify-between gap-4 border-b py-4"><span><strong>{application.userId?.name || "Applicant"}</strong><span className="block text-sm text-slate-500">{application.userId?.email} · {application.status}</span><span className="block text-xs text-slate-500">{application.specializations?.join(", ")}</span></span><span className="flex gap-2"><button type="button" onClick={() => reviewExpert(application, "UNDER_REVIEW")} className="rounded-lg border px-3 py-2 text-xs font-bold">Review</button><button type="button" onClick={() => reviewExpert(application, "APPROVED")} className="rounded-lg bg-emerald-700 px-3 py-2 text-xs font-bold text-white">Approve</button><button type="button" onClick={() => reviewExpert(application, "REJECTED")} className="rounded-lg bg-red-50 px-3 py-2 text-xs font-bold text-red-700">Reject</button></span></div>)}{!data.expertApplications.length && <p className="py-8 text-slate-500">No submitted expert applications.</p>}</div></TableState>}
+          {section === "admin-management" && user?.role === "SUPER_ADMIN" && <TableState><div className="p-5"><h2 className="text-lg font-black">Super Admin management</h2><p className="mt-2 text-sm text-slate-500">Only this account can appoint administrators or change their permissions.</p>{data.users.filter((item) => ["ADMIN", "SUPER_ADMIN"].includes(item.role)).map((item) => <div key={item._id} className="flex flex-wrap items-center justify-between gap-4 border-b py-4"><span><strong>{item.name}</strong><span className="block text-sm text-slate-500">{item.email} · {item.role} · {item.isActive ? "Active" : "Suspended"}</span></span><span className="flex gap-2"><button type="button" onClick={() => changePermissions(item)} disabled={item.role === "SUPER_ADMIN"} className="rounded-lg border px-3 py-2 text-xs font-bold disabled:opacity-40">Permissions</button><button type="button" onClick={() => mutate(`/admin/users/${item._id}/status`, { method: "PATCH", body: JSON.stringify({ isActive: !item.isActive }) })} disabled={item.role === "SUPER_ADMIN"} className="rounded-lg bg-emerald-50 px-3 py-2 text-xs font-bold text-emerald-800 disabled:opacity-40">{item.isActive ? "Suspend" : "Restore"}</button></span></div>)}</div></TableState>}
           {section === "species" && (
             <div className="grid gap-6 xl:grid-cols-[380px_1fr]">
               <form

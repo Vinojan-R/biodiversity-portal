@@ -9,6 +9,9 @@ import adminContentRoutes from "./routes/adminContent.js";
 import speciesRoutes from "./routes/species.js";
 import observationRoutes from "./routes/observations.js";
 import animalIdentificationRoutes from "./routes/animalIdentification.js";
+import userRoutes from "./routes/users.js";
+import expertApplicationRoutes from "./routes/expertApplications.js";
+import chatRoutes from "./routes/chat.js";
 
 const app = express();
 const allowedOrigins = new Set([
@@ -60,6 +63,10 @@ app.use("/api/auth", authRoutes);
 app.use("/api/species", speciesRoutes);
 app.use("/api/observations", observationRoutes);
 app.use("/api/animal-identification", animalIdentificationRoutes);
+app.use("/api/identify", animalIdentificationRoutes);
+app.use("/api/users", userRoutes);
+app.use("/api/expert-applications", expertApplicationRoutes);
+app.use("/api/chat", chatRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/admin", adminContentRoutes);
 

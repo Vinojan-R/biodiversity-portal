@@ -101,6 +101,7 @@ function Navbar() {
           >
             Learn
           </NavLink>
+          <NavLink to="/chat" className={linkClass} onClick={() => setMenuOpen(false)}>Chat</NavLink>
 
           {["ADMIN", "SUPER_ADMIN"].includes(user?.role) && (
             <NavLink to="/admin" className={linkClass} onClick={() => setMenuOpen(false)}>
@@ -118,6 +119,20 @@ function Navbar() {
             <p className="px-3 font-semibold text-white">
               {user?.name || "User"}
             </p>
+            <Link
+              to="/profile"
+              className="mt-2 block px-3 text-sm text-emerald-300 hover:text-white"
+              onClick={() => setMenuOpen(false)}
+            >
+              My profile
+            </Link>
+            <Link
+              to="/settings"
+              className="mt-1 block px-3 text-sm text-emerald-300 hover:text-white"
+              onClick={() => setMenuOpen(false)}
+            >
+              Account settings
+            </Link>
           </div>
 
           {/* Logout */}
